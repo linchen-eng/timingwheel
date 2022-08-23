@@ -77,6 +77,9 @@ func (tw *TimingWheel) start() {
 
 //任务处理的回调方法
 func (tw *TimingWheel) tickHandler(tasks map[string]*Task) {
+	if tasks == nil { //当前时间槽没有待执行的任务
+		return
+	}
 	for key, task := range tasks {
 		if task.round > 0 {
 			//当前任务还不到能执行的时候
@@ -84,12 +87,17 @@ func (tw *TimingWheel) tickHandler(tasks map[string]*Task) {
 			continue
 		}
 		delete(tasks, key)
+		//TODO 待执行任务量大时需注意 goroutine 将会大量被开启
 		go tw.handler(task)
 	}
 }
 
 //添加任务
 func (tw *TimingWheel) addTask(taskInfo Task) {
+	if taskInfo.key == "" || taskInfo.info == nil {
+		//任务信息错误
+		return
+	}
 	//获取时间槽位置 和圈数
 	delaySlots := taskInfo.delay / int(tw.interval.Seconds())
 	round := delaySlots / tw.slotNum
@@ -111,6 +119,10 @@ func (tw *TimingWheel) addTask(taskInfo Task) {
 
 //删除任务
 func (tw *TimingWheel) delTask(key string) {
+	if key == "" {
+		//任务信息错误
+		return
+	}
 	curSlots := tw.slots
 	curVal := curSlots.val
 	for curSlots != nil {

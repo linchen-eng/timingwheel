@@ -1,7 +1,9 @@
-### TimingWheel v1.0
+### TimingWheel(单层时间轮) v1.0
 
 #### `时间轮延时任务处理器`
 #### `20220823`
+
+![img.png](img.png)
 
 ```
 func main() {
