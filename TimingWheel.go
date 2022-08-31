@@ -14,30 +14,20 @@ type TimingWheel struct {
 	addTaskChannel chan Task     //新增任务channel
 	delTaskChannel chan string   //删除任务channel
 	stopChannel    chan bool     //停止定时器channel
+	handlerChannel chan bool     //处理时间槽任务能同时开启的goroutine数量，通过带缓冲的管道控制
 }
 
 // Handler 任务回调处理函数
-type Handler func(interface{})
+type Handler func(interface{}, chan bool)
 
 // CreateTimingWheel 创建时间轮
 // interval 指针每隔多久往前移动一格
 // slotTotal 槽的数量
+// concurrent handler的并发数量限制
 // handler 任务回调处理函数
-func CreateTimingWheel(interval time.Duration, slotTotal int, handler Handler) *TimingWheel {
+func CreateTimingWheel(interval time.Duration, slotTotal, concurrent int, handler Handler) *TimingWheel {
 	//创建时间槽环形链表
-	var slotsListNode *ListNode
-	var tail *ListNode
-
-	for i := 0; i < slotTotal; i++ {
-		if slotsListNode == nil {
-			slotsListNode = &ListNode{val: i}
-			tail = slotsListNode
-			continue
-		}
-		tail.next = &ListNode{val: i}
-		tail = tail.next
-	}
-	tail.next = slotsListNode
+	slotsListNode := initRingList(slotTotal)
 
 	return &TimingWheel{
 		interval:       interval,
@@ -47,6 +37,7 @@ func CreateTimingWheel(interval time.Duration, slotTotal int, handler Handler) *
 		addTaskChannel: make(chan Task),
 		delTaskChannel: make(chan string),
 		stopChannel:    make(chan bool),
+		handlerChannel: make(chan bool, concurrent),
 	}
 }
 
@@ -87,8 +78,8 @@ func (tw *TimingWheel) tickHandler(tasks map[string]*Task) {
 			continue
 		}
 		delete(tasks, key)
-		//TODO 待执行任务量大时需注意 goroutine 将会大量被开启
-		go tw.handler(task)
+		tw.handlerChannel <- true
+		go tw.handler(task, tw.handlerChannel)
 	}
 }
 

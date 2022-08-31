@@ -8,8 +8,9 @@
 ```
 func main() {
     //创建时间轮
-    timingWheel := CreateTimingWheel(1*time.Second, 60, func(data interface{}) {
+    timingWheel := CreateTimingWheel(1*time.Second, 60, 10000, func(data interface{}, handlerChannel chan bool) {
         fmt.Printf("%+v\n", data)
+        <- handlerChannel
     })
     //启动时间轮
     timingWheel.Running()
