@@ -5,32 +5,4 @@
 
 ![img.png](img.png)
 
-```
-func main() {
-    //创建时间轮
-    timingWheel := CreateTimingWheel(1*time.Second, 60, 10000, func(data interface{}, handlerChannel chan bool) {
-        fmt.Printf("%+v\n", data)
-        <- handlerChannel
-    })
-    //启动时间轮
-    timingWheel.Running()
-    
-    task1 := Task{key: "111", delay: 20, info: "111"}
-    timingWheel.AddTask(task1)
-    
-    task2 := Task{key: "222", delay: 21, info: "222"}
-    timingWheel.AddTask(task2)
-    
-    task3 := Task{key: "333", delay: 65, info: "222"}
-    timingWheel.AddTask(task3)
-    
-    //删除任务
-    timingWheel.DelTask("222")
-    
-    //休眠5秒再添加一个不延时的任务
-    time.Sleep(5 * time.Second)
-    task4 := Task{key: "444", delay: 0, info: "111"}
-    timingWheel.AddTask(task4)
-    select {}
-}
-```
+![carbon](https://user-images.githubusercontent.com/44657989/200975288-685521bc-ed44-4842-8e1d-3e1b8341975f.png)
